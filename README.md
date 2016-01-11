@@ -89,3 +89,13 @@ Code and documentation copyright 2014-2015 Docker, inc. Code released under the
 Apache 2.0 license.
 
 Docs released under Creative commons.
+
+## Steps
+
+1. etcd
+
+2. curl http://127.0.0.1:2379/v2/keys/cluster1 -XPUT -d dir=true
+
+3. swarm join --addr=127.0.0.1:1229 etcd://127.0.0.1:2379/v2/keys/cluster1
+
+4. swarm manage etcd://127.0.0.1:2379/v2/keys/cluster1

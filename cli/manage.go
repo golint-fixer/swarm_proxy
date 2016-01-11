@@ -13,6 +13,7 @@ import (
 	"github.com/codegangsta/cli"
 	"github.com/docker/swarm/api"
 	"github.com/docker/swarm/cluster"
+	"github.com/docker/swarm/cluster/lonely"
 	"github.com/docker/swarm/cluster/mesos"
 	"github.com/docker/swarm/cluster/swarm"
 	"github.com/docker/swarm/discovery"
@@ -99,6 +100,9 @@ func loadTLSConfig(ca, cert, key string, verify bool) (*tls.Config, error) {
 
 // Initialize the discovery service.
 func createDiscovery(uri string, c *cli.Context, discoveryOpt []string) discovery.Discovery {
+	if c.String("cluster-driver") == "proxy" {
+		return nil
+	}
 	hb, err := time.ParseDuration(c.String("heartbeat"))
 	if err != nil {
 		log.Fatalf("invalid --heartbeat: %v", err)
@@ -231,7 +235,6 @@ func manage(c *cli.Context) {
 			log.Fatal("--tlscert, --tlskey and --tlscacert require the use of either --tls or --tlsverify")
 		}
 	}
-
 	uri := getDiscovery(c)
 	if uri == "" {
 		log.Fatalf("discovery required to manage a cluster. See '%s manage --help'.", c.App.Name)
@@ -260,6 +263,8 @@ func manage(c *cli.Context) {
 		cl, err = mesos.NewCluster(sched, tlsConfig, uri, c.StringSlice("cluster-opt"))
 	case "swarm":
 		cl, err = swarm.NewCluster(sched, tlsConfig, discovery, c.StringSlice("cluster-opt"))
+	case "proxy":
+		cl, err = lonely.NewCluster(sched, tlsConfig, nil, c.StringSlice("cluster-opt"))
 	default:
 		log.Fatalf("unsupported cluster %q", c.String("cluster-driver"))
 	}

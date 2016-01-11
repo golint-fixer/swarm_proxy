@@ -187,18 +187,18 @@ func (e *Engine) updateSpecs() error {
 		return fmt.Errorf("cannot get resources for this engine, make sure %s is a Docker Engine, not a Swarm manager", e.Addr)
 	}
 
-	v, err := e.client.Version()
-	if err != nil {
-		return err
-	}
+	//v, err := e.client.Version()
+	//if err != nil {
+	//	return err
+	//}
 
-	engineVersion := version.Version(v.Version)
+	//engineVersion := version.Version(v.Version)
 
-	// Older versions of Docker don't expose the ID field, Labels and are not supported
-	// by Swarm.  Catch the error ASAP and refuse to connect.
-	if engineVersion.LessThan(minSupportedVersion) {
-		return fmt.Errorf("engine %s is running an unsupported version of Docker Engine. Please upgrade to at least %s", e.Addr, minSupportedVersion)
-	}
+	//// Older versions of Docker don't expose the ID field, Labels and are not supported
+	//// by Swarm.  Catch the error ASAP and refuse to connect.
+	//if engineVersion.LessThan(minSupportedVersion) {
+	//	return fmt.Errorf("engine %s is running an unsupported version of Docker Engine. Please upgrade to at least %s", e.Addr, minSupportedVersion)
+	//}
 
 	e.ID = info.ID
 	e.Name = info.Name

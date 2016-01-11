@@ -1,1 +1,8 @@
-/swarm
+*.out
+*.test
+*.git
+swarm
+swarm_cluster_stdlone
+tttttttt
+default.etcd
+Godeps

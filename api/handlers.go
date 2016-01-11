@@ -359,7 +359,7 @@ func getContainerJSON(c *context, w http.ResponseWriter, r *http.Request) {
 		httpError(w, fmt.Sprintf("No such container %s", name), http.StatusNotFound)
 		return
 	}
-	client, scheme := newClientAndScheme(c.tlsConfig)
+	client, scheme := newClientAndScheme(c.tlsConfig, container.Engine.Addr)
 
 	resp, err := client.Get(scheme + "://" + container.Engine.Addr + "/containers/" + container.Id + "/json")
 	if err != nil {
@@ -627,7 +627,7 @@ func postContainersExec(c *context, w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client, scheme := newClientAndScheme(c.tlsConfig)
+	client, scheme := newClientAndScheme(c.tlsConfig, container.Engine.Addr)
 
 	resp, err := client.Post(scheme+"://"+container.Engine.Addr+"/containers/"+container.Id+"/exec", "application/json", r.Body)
 	if err != nil {
@@ -785,6 +785,7 @@ func proxyContainer(c *context, w http.ResponseWriter, r *http.Request) {
 
 // Proxy a request to the right node and force refresh container
 func proxyContainerAndForceRefresh(c *context, w http.ResponseWriter, r *http.Request) {
+	fmt.Println(">>>>>>>>>>>>>>>>I am the doer!<<<<<<<<<<<<<<<<<<")
 	name, container, err := getContainerFromVars(c, mux.Vars(r))
 	if err != nil {
 		httpError(w, err.Error(), http.StatusNotFound)

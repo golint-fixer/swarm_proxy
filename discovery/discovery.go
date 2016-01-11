@@ -135,7 +135,8 @@ func parse(rawurl string) (string, string) {
 // Returns an error if the URL scheme is not supported.
 func New(rawurl string, heartbeat time.Duration, ttl time.Duration, discoveryOpt map[string]string) (Discovery, error) {
 	scheme, uri := parse(rawurl)
-
+	log.Warnf("scheme=%#v,uri=%#v\n", scheme, uri)
+	log.Warnf("discoveries=%#v\n", discoveries)
 	if discovery, exists := discoveries[scheme]; exists {
 		log.WithFields(log.Fields{"name": scheme, "uri": uri}).Debug("Initializing discovery service")
 		err := discovery.Initialize(uri, heartbeat, ttl, discoveryOpt)

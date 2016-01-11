@@ -38,5 +38,17 @@ var (
 			Flags:     []cli.Flag{flJoinAdvertise, flHeartBeat, flTTL, flDiscoveryOpt},
 			Action:    join,
 		},
+		{
+			Name:      "proxy",
+			ShortName: "p",
+			Usage:     "proxy to a docker ",
+			Flags: []cli.Flag{
+				flHosts,
+				flTLS, flTLSCaCert, flTLSCert, flTLSKey, flTLSVerify,
+				flCluster, flClusterOpt, flStrategy, flFilter,
+				flJoinAdvertise, flHeartBeat, flTTL,
+			},
+			Action: proxy,
+		},
 	}
 )

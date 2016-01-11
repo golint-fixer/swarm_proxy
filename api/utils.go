@@ -53,11 +53,35 @@ func sendErrorJSONMessage(w io.Writer, errorCode int, errorMessage string) {
 
 	json.NewEncoder(w).Encode(message)
 }
-func newClientAndScheme(tlsConfig *tls.Config) (*http.Client, string) {
-	if tlsConfig != nil {
-		return &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}, "https"
+func newClientAndScheme(tlsConfig *tls.Config, addr string) (*http.Client, string) {
+
+	var (
+		proto  = "tcp"
+		scheme = "http"
+	)
+	if parts := strings.SplitN(addr, "://", 2); len(parts) == 2 {
+		proto, addr = parts[0], parts[1]
 	}
-	return &http.Client{}, "http"
+	tr := &http.Transport{}
+	if proto == "unix" {
+		tr.Dial = func(network, addre string) (net.Conn, error) {
+			return net.Dial("unix", addr)
+		}
+	}
+
+	if tlsConfig != nil {
+		tr.TLSClientConfig = tlsConfig
+		scheme = "https"
+	}
+
+	return &http.Client{Transport: tr}, scheme
+
+	/*
+		if tlsConfig != nil {
+			return &http.Client{Transport: &http.Transport{TLSClientConfig: tlsConfig}}, "https"
+		}
+		return &http.Client{}, "http"
+	*/
 }
 
 func getContainerFromVars(c *context, vars map[string]string) (string, *cluster.Container, error) {
@@ -98,7 +122,7 @@ func closeIdleConnections(client *http.Client) {
 
 func proxyAsync(tlsConfig *tls.Config, addr string, w http.ResponseWriter, r *http.Request, callback func(*http.Response)) error {
 	// Use a new client for each request
-	client, scheme := newClientAndScheme(tlsConfig)
+	client, scheme := newClientAndScheme(tlsConfig, addr)
 	// RequestURI may not be sent to client
 	r.RequestURI = ""
 
@@ -131,8 +155,9 @@ func proxy(tlsConfig *tls.Config, addr string, w http.ResponseWriter, r *http.Re
 }
 
 func hijack(tlsConfig *tls.Config, addr string, w http.ResponseWriter, r *http.Request) error {
+	var proto = "tcp"
 	if parts := strings.SplitN(addr, "://", 2); len(parts) == 2 {
-		addr = parts[1]
+		proto, addr = parts[0], parts[1]
 	}
 
 	log.WithField("addr", addr).Debug("Proxy hijack request")
@@ -143,9 +168,9 @@ func hijack(tlsConfig *tls.Config, addr string, w http.ResponseWriter, r *http.R
 	)
 
 	if tlsConfig != nil {
-		d, err = tls.Dial("tcp", addr, tlsConfig)
+		d, err = tls.Dial(proto, addr, tlsConfig)
 	} else {
-		d, err = net.Dial("tcp", addr)
+		d, err = net.Dial(proto, addr)
 	}
 	if err != nil {
 		return err
