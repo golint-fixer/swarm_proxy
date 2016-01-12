@@ -2,8 +2,9 @@ package lonely
 
 import (
 	"crypto/tls"
-	//"fmt"
+	"fmt"
 	"io"
+	"os/exec"
 	"regexp"
 	"strings"
 	"sync"
@@ -94,11 +95,36 @@ func (c *Cluster) CreateContainer(config *cluster.ContainerConfig, name string) 
 
 func (c *Cluster) createContainer(config *cluster.ContainerConfig, name string, withSoftImageAffinity bool) (*cluster.Container, error) {
 	//append ip process
+	ipdev, ok := config.Labels["upm.ip"]
+	var (
+		ip  string
+		dev string
+	)
+	log.Info(ipdev)
+	if ok {
+		strs := strings.SplitN(ipdev, ":", 2)
+		if len(strs) != 2 {
+			return nil, fmt.Errorf("ip label formate is wrong!")
+		}
+		ip = strs[0]
+		dev = strs[1]
+	}
+
 	dockerConfig := &config.ContainerConfig
 	id, err := c.engine.CreateContainer(dockerConfig, name)
 	if err != nil {
 		return nil, err
 	}
+
+	if ok {
+		script := fmt.Sprintf("ip addr add %s dev %s", ip, dev)
+		command := exec.Command("/bin/bash", "-c", script)
+		if err := command.Run(); err != nil {
+			c.engine.RemoveContainer(id, true, true)
+			return nil, err
+		}
+	}
+
 	clusterC := &cluster.Container{}
 	clusterC.Id = id
 	return clusterC, nil
