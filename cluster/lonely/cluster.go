@@ -132,9 +132,32 @@ func (c *Cluster) createContainer(config *cluster.ContainerConfig, name string, 
 
 // RemoveContainer aka Remove a container from the cluster.
 func (c *Cluster) RemoveContainer(container *cluster.Container, force, volumes bool) error {
-	err := c.engine.RemoveContainer(container.Id, force, volumes)
+	ca, err := c.engine.InspectContainer(container.Id)
 	if err != nil {
 		return err
+	}
+
+	ipdev, ok := ca.Config.Labels["ip"]
+	var (
+		ip  string
+		dev string
+	)
+
+	err = c.engine.RemoveContainer(container.Id, force, volumes)
+	if err != nil {
+		return err
+	}
+
+	if ok {
+		strs := strings.SplitN(ipdev, ":", 2)
+		if len(strs) == 2 {
+			ip = strs[0]
+			dev = strs[1]
+		}
+
+		script := fmt.Sprintf("ip addr del %s dev %s", ip, dev)
+		command := exec.Command("/bin/bash", "-c", script)
+		return command.Run()
 	}
 	return nil
 }
