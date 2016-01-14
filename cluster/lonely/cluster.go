@@ -137,7 +137,7 @@ func (c *Cluster) RemoveContainer(container *cluster.Container, force, volumes b
 		return err
 	}
 
-	ipdev, ok := ca.Config.Labels["ip"]
+	ipdev, ok := ca.Config.Labels["upm.ip"]
 	var (
 		ip  string
 		dev string
